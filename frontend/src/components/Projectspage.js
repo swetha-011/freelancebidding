@@ -61,7 +61,7 @@ const ProjectsPage = () => {
             value={newProject.deadline}
             onChange={e => setNewProject({ ...newProject, deadline: e.target.value })}
           />
-          <button type="submit">Post Project</button>
+          <button type="submit">Pre Project</button>
         </form>
       </section>
 
