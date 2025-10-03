@@ -55,7 +55,7 @@ jobs:
   deploy:
     needs: test
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main' && secrets.EC2_HOST != ''
+    if: github.ref == 'refs/heads/main'
 
     steps:
     - name: Checkout code
@@ -76,7 +76,17 @@ jobs:
     - name: Build frontend
       run: npm run build --prefix frontend
 
+    - name: Check EC2 secrets
+      id: check-secrets
+      run: |
+        if [ -n "${{ secrets.EC2_HOST }}" ]; then
+          echo "secrets_available=true" >> $GITHUB_OUTPUT
+        else
+          echo "secrets_available=false" >> $GITHUB_OUTPUT
+        fi
+
     - name: Deploy to EC2
+      if: steps.check-secrets.outputs.secrets_available == 'true'
       uses: appleboy/ssh-action@v1.0.3
       with:
         host: ${{ secrets.EC2_HOST }}
@@ -92,13 +102,8 @@ jobs:
           pm2 restart all
           pm2 status
 
-  deploy-info:
-    needs: test
-    runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main' && secrets.EC2_HOST == ''
-
-    steps:
     - name: Deployment Info
+      if: steps.check-secrets.outputs.secrets_available == 'false'
       run: |
         echo "🚀 CI/CD Pipeline completed successfully!"
         echo "📝 To enable automatic deployment to EC2:"
